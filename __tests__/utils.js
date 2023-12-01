@@ -4,6 +4,10 @@ const {
     get_split_config
 } = require('../utils') // replace with your actual file path
 
+const {
+    delete_split_configs
+} = require('../storage')
+
 describe('get_excluded_tags', () => {
     test('should return correct format', () => {
         process.env.EXCLUDE_TAGS = 'omega alpha pizza/omega omega/alpha/pizza'
@@ -102,12 +106,14 @@ describe('get_min_tag_sizes', () => {
 
 describe('get_split_config', () => {
     test('should return null when SPLIT_TRIGGER is not set', () => {
+        delete_split_configs()
         delete process.env.SPLIT_TRIGGER
         const result = get_split_config({ fee_rate: 0 })
         expect(result).toEqual({ split_trigger: null, split_target_size_sats: null })
     })
 
     test('should return normal config when below medium fee threshold', () => {
+        delete_split_configs()
         process.env.SPLIT_TRIGGER = 'ALWAYS'
         process.env.SPLIT_UTXO_SIZE_SATS = '10000000'
         process.env.SPLIT_TRIGGER_MEDIUM_FEE_THRESHOLD = '20'
@@ -121,6 +127,7 @@ describe('get_split_config', () => {
     })
 
     test('should return medium fee', () => {
+        delete_split_configs()
         process.env.SPLIT_TRIGGER = 'ALWAYS'
         process.env.SPLIT_UTXO_SIZE_SATS = '10000000'
         process.env.SPLIT_TRIGGER_MEDIUM_FEE_THRESHOLD = '20'
@@ -134,6 +141,7 @@ describe('get_split_config', () => {
     })
 
     test('should return high fee', () => {
+        delete_split_configs()
         process.env.SPLIT_TRIGGER = 'ALWAYS'
         process.env.SPLIT_UTXO_SIZE_SATS = '10000000'
         process.env.SPLIT_TRIGGER_MEDIUM_FEE_THRESHOLD = '20'
@@ -147,6 +155,7 @@ describe('get_split_config', () => {
     })
 
     test('should return normal config when no fee thresholds set', () => {
+        delete_split_configs()
         process.env.SPLIT_TRIGGER = 'ALWAYS'
         process.env.SPLIT_UTXO_SIZE_SATS = '10000000'
         delete process.env.SPLIT_TRIGGER_MEDIUM_FEE_THRESHOLD
@@ -157,5 +166,21 @@ describe('get_split_config', () => {
         delete process.env.SPLIT_UTXO_SIZE_SATS_HIGH_FEE
         const result = get_split_config({ fee_rate: 45 })
         expect(result).toEqual({ split_trigger: 'ALWAYS', split_target_size_sats: 10000000 })
+    })
+
+    test('should use saved split configs when fee increases past original threshold', () => {
+        delete_split_configs()
+        process.env.SPLIT_TRIGGER = 'ALWAYS'
+        process.env.SPLIT_UTXO_SIZE_SATS = '10000000'
+        process.env.SPLIT_TRIGGER_MEDIUM_FEE_THRESHOLD = '20'
+        process.env.SPLIT_TRIGGER_MEDIUM_FEE = 'NO_SATS'
+        process.env.SPLIT_UTXO_SIZE_SATS_MEDIUM_FEE = '20000000'
+        process.env.SPLIT_TRIGGER_HIGH_FEE_THRESHOLD = '40'
+        process.env.SPLIT_TRIGGER_HIGH_FEE = 'NEVER'
+        process.env.SPLIT_UTXO_SIZE_SATS_HIGH_FEE = '50000000'
+        const result = get_split_config({ fee_rate: 19 })
+        expect(result).toEqual({ split_trigger: 'ALWAYS', split_target_size_sats: 10000000 })
+        const result2 = get_split_config({ fee_rate: 21 })
+        expect(result2).toEqual({ split_trigger: 'ALWAYS', split_target_size_sats: 10000000 })
     })
 })
