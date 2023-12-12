@@ -86,7 +86,7 @@ async function get_btc_balance() {
 
 async function withdraw({ amount_btc }) {
     await check_and_set_credentials()
-    const path = `/withdrawals/crypto`
+    const path = `/v1/portfolios/${PORTFOLIO_ID}/wallets/${BTC_WALLET_ID}/withdrawals`
     const timestamp = `${Math.floor(Date.now() / 1000)}`
     const method = 'POST'
     const body = {
