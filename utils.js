@@ -76,6 +76,8 @@ function get_included_tags({ fee_rate }) {
         .map((tag) => tag.split('/'))
 }
 
+const satoshi_to_BTC = (satoshi) => parseFloat((satoshi / 100000000).toFixed(8));
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 function get_split_config({ utxo, fee_rate }) {
@@ -97,6 +99,9 @@ function get_split_config({ utxo, fee_rate }) {
     if (split_trigger) {
         if (!VALID_SPLIT_TRIGGERS.includes(process.env.SPLIT_TRIGGER)) {
             throw new Error(`Invalid SPLIT_TRIGGER: ${process.env.SPLIT_TRIGGER}, must be one of ${VALID_SPLIT_TRIGGERS.join(', ')}`)
+        }
+        if (split_trigger !== 'NEVER' && !split_target_size_sats) {
+            throw new Error(`SPLIT_TRIGGER is set but SPLIT_UTXO_SIZE_SATS is not set properly for fee rate ${fee_rate}`)
         }
     }
     return { split_trigger, split_target_size_sats }
@@ -127,6 +132,7 @@ module.exports = {
     get_min_tag_sizes,
     get_split_config,
     get_included_tags,
+    satoshi_to_BTC,
     get_tag_by_address,
     sleep,
     get_scan_config

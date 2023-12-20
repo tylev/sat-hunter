@@ -1,6 +1,6 @@
 const axios = require('axios')
 
-const BASE_URL = 'https://api.deezy.io/v1'
+const BASE_URL = process.env.DEEZY_BASE_URL || 'https://api.deezy.io/v1'
 
 function check_api_key() {
     if (!process.env.DEEZY_API_KEY) {
@@ -11,7 +11,7 @@ async function post_scan_request(request_body) {
     check_api_key()
     const url = `${BASE_URL}/sat-hunting/scan`
     const { data } = await axios.post(url, request_body, { headers: { 'x-api-token': process.env.DEEZY_API_KEY } }).catch(err => {
-        console.error(err)
+        console.error(err.data)
         return { data: {} }
     })
     return data
@@ -21,6 +21,16 @@ async function get_scan_request({ scan_request_id }) {
     check_api_key()
     const url = `${BASE_URL}/sat-hunting/scan/${scan_request_id}`
     const { data } = await axios.get(url, { headers: { 'x-api-token': process.env.DEEZY_API_KEY } }).catch(err => {
+        console.error(err.data)
+        return { data: {} }
+    })
+    return data
+}
+
+async function get_user_limits() {
+    check_api_key()
+    const url = `${BASE_URL}/sat-hunting/user/limits`
+    const { data } = await axios.get(url, { headers: { 'x-api-token': process.env.DEEZY_API_KEY } }).catch(err => {
         console.error(err)
         return { data: {} }
     })
@@ -29,5 +39,6 @@ async function get_scan_request({ scan_request_id }) {
 
 module.exports = {
     post_scan_request,
-    get_scan_request
+    get_scan_request,
+    get_user_limits,
 }
