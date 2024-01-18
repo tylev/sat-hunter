@@ -55,7 +55,7 @@ async function set_btc_wallet_id() {
         return {}
     })
     console.log(data)
-    BTC_WALLET_ID = data.wallets[0].id
+    BTC_WALLET_ID = data.wallets[1].id
 }
 
 async function check_and_set_credentials() {
